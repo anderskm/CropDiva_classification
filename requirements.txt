@@ -1,0 +1,4 @@
+GPUtil
+scikit-image
+scipy==1.5.4
+tensorflow==2.2
