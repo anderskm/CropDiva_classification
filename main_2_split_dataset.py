@@ -5,13 +5,13 @@ import hashlib
 import json
 import numpy as np
 import os
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pickle
-import plotly
-import plotly.express as px
+# import plotly
+# import plotly.express as px
 import pandas as pd
 import random
-import scipy.spatial.distance
+# import scipy.spatial.distance
 from scipy.stats import chisquare
 import seaborn as sns
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
@@ -22,6 +22,7 @@ import utils
 input_dataframe_filename = 'dataframe_annotations__filtered.pkl'
 ratios = [0.7, 0.15, 0.15] # Train, validation, test
 load_rng_from_identifier = '5e38f04b85438b1289928e61' # Set to identifier to load previous used rng_state. if set to '', use a new random seed/state set by the random number generators
+load_rng_from_identifier = '' # Set to identifier to load previous used rng_state. if set to '', use a new random seed/state set by the random number generators
 
 # Load dataframe
 df = pd.read_pickle(input_dataframe_filename)
@@ -50,7 +51,7 @@ df['label_one_hot'] = df[['label_no']].apply(lambda x: ohe.transform(np.asarray(
 
 images_per_label = np.asarray(df.groupby(['label'])['label'].count())
 # cluster_weights = np.asarray(df.groupby(['cluster','label'])['label'].count().unstack().fillna(0))
-df_cluster_weights = df.groupby(['cluster','label'])['label'].count().unstack().fillna(0)
+df_cluster_weights = df.groupby(['ImageID','label'])['label'].count().unstack().fillna(0)
 
 training_clusters = []
 training_cluster_weights = np.zeros(images_per_label.shape)
@@ -64,9 +65,9 @@ chisq_va_prev = np.Inf
 chisq_te_prev = np.Inf
 
 # Scramble cluster order, such that they are added in random order
-clusters_random_order = np.random.permutation(df['cluster'].unique())
+clusters_random_order = np.random.permutation(df['ImageID'].unique())
 
-for cluster in tqdm.tqdm(clusters_random_order, desc='Assigning clusters to datasets (' + ','.join([str(r) for r in ratios]) + '): '):
+for cluster in tqdm.tqdm(clusters_random_order, desc='Assigning Images to datasets (' + ','.join([str(r) for r in ratios]) + '): '):
     cluster_weights = df_cluster_weights.iloc[df_cluster_weights.index == cluster,:].values.squeeze()
     # Get chi-squared value of adding cluster to each of the datasets
     chisq_tr, p_tr = chisquare(training_cluster_weights + cluster_weights, np.round(images_per_label*ratios[0]), ddof=len(images_per_label)-1)
@@ -99,9 +100,9 @@ chisq_te, p_te = chisquare(test_cluster_weights, np.round(images_per_label*ratio
 
 # Store assigned dataset to dataframe
 df['Dataset'] = ''
-df.loc[df['cluster'].isin(training_clusters),'Dataset'] = 'Train'
-df.loc[df['cluster'].isin(validation_clusters),'Dataset'] = 'Validation'
-df.loc[df['cluster'].isin(test_clusters),'Dataset'] = 'Test'
+df.loc[df['ImageID'].isin(training_clusters),'Dataset'] = 'Train'
+df.loc[df['ImageID'].isin(validation_clusters),'Dataset'] = 'Validation'
+df.loc[df['ImageID'].isin(test_clusters),'Dataset'] = 'Test'
 
 # Print overview of distributions
 print('Labels per dataset')
@@ -122,6 +123,8 @@ hash_func_test = hashlib.blake2s(digest_size=4)
 hash_func_test.update(bytes(''.join([str(c) for c in test_clusters]), 'utf-8'))
 
 dataset_split_identifier = hash_func_train.hexdigest() + hash_func_validation.hexdigest() + hash_func_test.hexdigest()
+print('Dataset identifier:')
+print(dataset_split_identifier)
 
 # Create output folder
 output_folder = os.path.join('Datasets', dataset_split_identifier)
@@ -140,10 +143,10 @@ fob = open(os.path.join(output_folder, 'label_encoder_' + dataset_split_identifi
 pickle.dump((le, label_dict), fob)
 fob.close()
 
-# Plot image locations on map. Color by assigned dataset
-fig1 = px.scatter_mapbox(df, lat='latitude', lon='longitude', color='Dataset', mapbox_style='carto-positron')
-fig1.show()
-plotly.offline.plot(fig1, filename=os.path.join(output_folder, 'map_of_datasets_' + dataset_split_identifier + '.html'))
+# # Plot image locations on map. Color by assigned dataset
+# fig1 = px.scatter_mapbox(df, lat='latitude', lon='longitude', color='Dataset', mapbox_style='carto-positron')
+# fig1.show()
+# plotly.offline.plot(fig1, filename=os.path.join(output_folder, 'map_of_datasets_' + dataset_split_identifier + '.html'))
 
 # Create dataframe for each dataset
 df_train,_ = utils.dataframe_filtering(df, df['Dataset'] == 'Train')

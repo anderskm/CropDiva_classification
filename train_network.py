@@ -138,7 +138,7 @@ def main():
             DFs.append(pd.DataFrame(df_train[df_train['label'] == row.name].values.repeat(row['scale_factor'], axis=0), columns=df_train.keys()))
         # Merge dataframes for each label into new training dataframe
         df_train = pd.concat(DFs, ignore_index=True)
-        df_train = df_train.sort_values(by='ComputerTime') # Sort by ComputerTime to get the images in somewhat same order as before
+        df_train = df_train.sort_values(by=['label','UploadID','ImageID']) # Sort to get the images in somewhat same order as before
         print('Expected size of new dataframe:', np.prod(df_image_label_count.values,axis=1).sum())
         print('Actual size of new dataframe:', len(df_train))
 
@@ -174,6 +174,13 @@ def main():
     loss_func = cnn_model.setup_loss_func(from_logits=True)
     print('Compiling network...')
     model.compile(loss=loss_func, optimizer=optimizer, metrics=['accuracy','categorical_accuracy'])
+
+    print('Model input(s):')
+    [print(i.shape, i.dtype) for i in model.inputs]
+    print('Model output(s):')
+    [print(o.shape, o.dtype) for o in model.outputs]
+    print('Model layers:')
+    [print(l.name, l.input_shape, l.dtype) for l in model.layers]
 
     print('Input shape:', tuple(model.input.shape))
     print('Output shape:', tuple(model.output.shape))

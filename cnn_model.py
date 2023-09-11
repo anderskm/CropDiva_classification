@@ -26,12 +26,14 @@ class dataset_sample_generator(tf.keras.utils.Sequence):
         df_batch = self.df.iloc[batch_indices,:]
 
         if self.image_size:
-            batch_x = np.array([skimage.transform.resize(skimage.io.imread(os.path.join(self.image_folder, row['folder'], row['image'])), self.image_size) for r,row in df_batch.iterrows()])
+            batch_x = np.array([skimage.transform.resize(skimage.io.imread(os.path.join(self.image_folder, row['folder'], row['image'])), self.image_size) for r,row in df_batch.iterrows()]) #, dtype=object)
+            # batch_x = np.concatenate([skimage.transform.resize(skimage.io.imread(os.path.join(self.image_folder, row['folder'], row['image'])), self.image_size) for r,row in df_batch.iterrows()], axis=0)
         else:
-            batch_x = np.array([skimage.io.imread(os.path.join(self.image_folder, row['folder'], row['image'])) for r, row in df_batch.iterrows()])
+            batch_x = np.array([skimage.io.imread(os.path.join(self.image_folder, row['folder'], row['image'])) for r, row in df_batch.iterrows()]) #, dtype=object)
+            # batch_x = np.concatenate([skimage.io.imread(os.path.join(self.image_folder, row['folder'], row['image'])) for r, row in df_batch.iterrows()], axis=0)
         # batch_x = tf.keras.preprocessing.image.random_shear(batch_x, intensity=5, fill_mode='reflect')
         # print(batch_x.shape)
-        batch_y = np.vstack(df_batch['label_one_hot'])
+        batch_y = np.vstack(df_batch['label_one_hot']).astype('float32')
         return batch_x, batch_y
 
     def on_epoch_end(self):
@@ -56,7 +58,7 @@ def build_model(input_shape, N_classes, basenet='ResNet50V2', weights='imagenet'
         [
             tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal"),
             tf.keras.layers.experimental.preprocessing.RandomContrast(factor=0.2),
-            tf.keras.layers.experimental.preprocessing.RandomCrop(height=input_shape[0], width=input_shape[0])
+            # tf.keras.layers.experimental.preprocessing.RandomCrop(height=input_shape[0], width=input_shape[0])
         ]
     )
     x = data_augmentation(x)
