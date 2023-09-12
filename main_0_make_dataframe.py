@@ -50,16 +50,16 @@ for img_folder in tqdm.tqdm(image_folders, desc='Parsing subfolders'):
 
         label = img_folder
 
-        df_bounding_boxes_list.append(pd.DataFrame.from_dict({'image': image_name, 
-                                                                'folder': img_folder, 
-                                                                'EPPO': EPPO, 
-                                                                'UploadID': UploadID, 
-                                                                'ImageID': ImageID, 
-                                                                'BBoxID': BBoxID,
-                                                                'width': width,
-                                                                'height': height,
-                                                                'area': area,
-                                                                'label': label
+        df_bounding_boxes_list.append(pd.DataFrame.from_dict({'image': [image_name],
+                                                                'folder': [img_folder],
+                                                                'EPPO': [EPPO],
+                                                                'UploadID': [UploadID],
+                                                                'ImageID': [ImageID],
+                                                                'BBoxID': [BBoxID],
+                                                                'width': [width],
+                                                                'height': [height],
+                                                                'area': [area],
+                                                                'label': [label]
                                                             }))
     df_bounding_boxes = pd.concat(df_bounding_boxes_list)
     DFs.append(df_bounding_boxes)

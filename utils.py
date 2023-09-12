@@ -4,8 +4,9 @@ def print_annotation_stats(df):
     print('\nNumber of images with each label:')
     df_img_per_class = df.groupby(['label','UploadID'])['label'].count().unstack().fillna(0).astype(np.uint16)
     df_img_per_class['Sum'] = df_img_per_class.sum(axis=1)
-    df_img_per_class = df_img_per_class.append(df_img_per_class.sum(axis=0).rename('Sum'))
+    #df_img_per_class = df_img_per_class.append(df_img_per_class.sum(axis=0).rename('Sum'))
     print(df_img_per_class)
+    print(df_img_per_class.sum(axis=0).rename('Sum'))
 
     # Number of (unique) images
     print('\nNumber of images:')
