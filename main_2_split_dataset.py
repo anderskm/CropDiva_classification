@@ -13,7 +13,7 @@ import pandas as pd
 import random
 # import scipy.spatial.distance
 from scipy.stats import chisquare
-import seaborn as sns
+# import seaborn as sns
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import tqdm
 
