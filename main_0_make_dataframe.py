@@ -31,7 +31,9 @@ DFs = []
 for img_folder in tqdm.tqdm(image_folders, desc='Parsing subfolders'):
     image_list = glob.glob(os.path.join(data_folder, img_folder,'*.png'))
 
-    df_bounding_boxes = pd.DataFrame(columns=['image','folder','EPPO','UploadID','ImageID','BBoxID','width','height','area','label'])
+    df_bounding_boxes_list = []
+    # df_bounding_boxes = pd.DataFrame(columns=['image','folder','EPPO','UploadID','ImageID','BBoxID','width','height','area','label'])
+    df_bounding_boxes_list.append(pd.DataFrame(columns=['image','folder','EPPO','UploadID','ImageID','BBoxID','width','height','area','label']))
     for image_path in tqdm.tqdm(image_list, desc='Parsing ' + img_folder, leave=False):
         folder, image_name = os.path.split(image_path)
 
@@ -48,7 +50,7 @@ for img_folder in tqdm.tqdm(image_folders, desc='Parsing subfolders'):
 
         label = img_folder
 
-        df_bounding_boxes = df_bounding_boxes.append({'image': image_name, 
+        df_bounding_boxes_list.append({'image': image_name, 
                                                       'folder': img_folder, 
                                                       'EPPO': EPPO, 
                                                       'UploadID': UploadID, 
@@ -59,7 +61,7 @@ for img_folder in tqdm.tqdm(image_folders, desc='Parsing subfolders'):
                                                       'area': area,
                                                       'label': label
                                                       }, ignore_index=True)
-    
+    df_bounding_boxes = pd.concat(df_bounding_boxes_list)
     DFs.append(df_bounding_boxes)
 
 df_all = pd.concat(DFs, ignore_index=True)
