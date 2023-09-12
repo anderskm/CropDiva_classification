@@ -1,7 +1,9 @@
 GPUtil
+matplotlib
 pandas
 pillow
 scikit-image
+scikit-learn==1.0.2
 scipy==1.5.4
 tensorflow==2.2
 tqdm
