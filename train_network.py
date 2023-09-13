@@ -41,6 +41,8 @@ def main():
     parser_group_training.add_argument('--epochs', action='store', default=10, type=int, help='Number of training epochs to run before stopping (default: %(default)s).')
     parser_group_training.add_argument('--batch_size', action='store', default=32, type=int, help='Number of examples to include in each batch during training (default: %(default)s).')
     parser_group_training.add_argument('--finetune', action='store_true', help='Set flag to only fine-tune on the last classification layer.')
+    parser_group_training.add_argument('--loss_func', action='store', default='CrossEntropy', type=str, help='Name of loss function to use during training.')
+    parser_group_training.add_argument('--loss_params', action='store', type=str, help='Parameters parsed to loss function. Specified as a dict. See Keras documentation for available parameters.')
     parser_group_training.add_argument('--optimizer', action='store', default='Adam', type=str, help='Name of optimizer to use during training.')
     parser_group_training.add_argument('--optimizer_params', action='store', type=str, help='Parameters parsed to optimizer. Specified as a dict. See Keras documentation for available parameters.')
 
@@ -75,6 +77,11 @@ def main():
     batch_size = args['batch_size']
     epochs = args['epochs']
     fine_tune_only = args['finetune']
+    loss_func_name = args['loss_func'].lower()
+    if args['loss_params'] is None:
+        loss_params_dict = {}
+    else:
+        loss_params_dict = ast.literal_eval(args['loss_params'])
     optimizer_name = args['optimizer'].lower()
     if args['optimizer_params'] is None:
         optimizer_params_dict = {}
@@ -171,7 +178,7 @@ def main():
     # TODO: https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/LearningRateScheduler
     model_callbacks = cnn_model.setup_callbacks(network_folder_path=network_folder_path)
     optimizer = cnn_model.setup_optimizer(optimizer_name, optimizer_params_dict)
-    loss_func = cnn_model.setup_loss_func(from_logits=True)
+    loss_func = cnn_model.setup_loss_func(loss_func_name, from_logits=True, loss_params_dict=loss_params_dict)
     print('Compiling network...')
     model.compile(loss=loss_func, optimizer=optimizer, metrics=['accuracy','categorical_accuracy'])
 

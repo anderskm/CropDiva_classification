@@ -133,8 +133,14 @@ def setup_callbacks(network_folder_path):
     callbacks = [csv_logger_callback, checkpoint_callback, tensorboard_callback]
     return callbacks
 
-def setup_loss_func(from_logits=True):
-    return tf.keras.losses.CategoricalCrossentropy(from_logits=from_logits)
+def setup_loss_func(loss_func_name, from_logits=True, loss_params_dict={}):
+    if loss_func_name.lower() == 'CrossEntropy'.lower():
+        loss_func = tf.keras.losses.CategoricalCrossentropy(from_logits=from_logits, **loss_params_dict)
+    elif loss_func_name.lower() == 'FocalCrossEntropy'.lower():
+        loss_func = tf.keras.losses.CategoricalFocalCrossentropy(from_logits, **loss_params_dict)
+    else:
+        raise ValueError('Unknown name of loss function: ' + loss_func_name)
+    return loss_func
 
 def prediction_on_df(model, df, image_folder='.'):
     validation_predictions = []
