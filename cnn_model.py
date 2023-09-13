@@ -77,6 +77,9 @@ def build_model(input_shape, N_classes, basenet='ResNet50V2', weights='imagenet'
     if basenet.lower() == 'ResNet50V2'.lower():
         x = tf.keras.applications.resnet_v2.preprocess_input(x)
         model = tf.keras.applications.ResNet50V2(include_top=False, weights=weights, input_shape=[input_shape[0], input_shape[0], input_shape[2]], pooling=pooling, classes=N_classes, **kwargs)
+    elif basenet.lower() == 'EfficientNetV2S'.lower():
+        x = tf.keras.applications.efficientnet_v2.preprocess_input(x)
+        model = tf.keras.applications.efficientnet_v2.EfficientNetV2B2(include_top=False, weights=weights, input_shape=[input_shape[0], input_shape[0], input_shape[2]], pooling=pooling, classes=N_classes, **kwargs)
     elif basenet.lower() == 'MobileNetV2'.lower():
         x = tf.keras.applications.mobilenet_v2.preprocess_input(x)
         model = tf.keras.applications.MobileNetV2(include_top=False, weights=weights, input_shape=[input_shape[0], input_shape[0], input_shape[2]], pooling=pooling, classes=N_classes, **kwargs)
