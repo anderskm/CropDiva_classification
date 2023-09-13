@@ -137,7 +137,7 @@ def main():
     df_image_label_count = df_train.groupby('label')['image'].count().to_frame()
     num_examples_per_label = np.asarray(df_image_label_count)
     if not 'alpha' in loss_params_dict:
-        loss_params_dict['alpha'] = np.max(np.log2(num_examples_per_label))-np.log2(num_examples_per_label)+1 #1/np.log2(num_examples_per_label)
+        loss_params_dict['alpha'] = (1/num_examples_per_label).tolist() #np.max(np.log2(num_examples_per_label))-np.log2(num_examples_per_label)+1 #1/np.log2(num_examples_per_label)
 
     if stratify_training_data:
         scale_factors = np.round(np.max(num_examples_per_label)/num_examples_per_label).astype(int)
