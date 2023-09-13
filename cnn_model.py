@@ -19,7 +19,7 @@ class dataset_sample_generator(tf.keras.utils.Sequence):
         self.image_size = image_size
 
     def __len__(self):
-        return (np.ceil(len(self.df) / float(self.batch_size))).astype(np.int)
+        return (np.ceil(len(self.df) / float(self.batch_size))).astype(np.int64)
 
     def __getitem__(self, idx):
         batch_indices = self.indices[idx * self.batch_size:(idx + 1) * self.batch_size]
