@@ -134,10 +134,11 @@ def setup_callbacks(network_folder_path):
     return callbacks
 
 def setup_loss_func(loss_func_name, from_logits=True, loss_params_dict={}):
+    loss_params_dict['from_logits'] = from_logits
     if loss_func_name.lower() == 'CrossEntropy'.lower():
-        loss_func = tf.keras.losses.CategoricalCrossentropy(from_logits=from_logits, **loss_params_dict)
+        loss_func = tf.keras.losses.CategoricalCrossentropy(**loss_params_dict)
     elif loss_func_name.lower() == 'FocalCrossEntropy'.lower():
-        loss_func = tf.keras.losses.CategoricalFocalCrossentropy(from_logits, **loss_params_dict)
+        loss_func = tf.keras.losses.CategoricalFocalCrossentropy(**loss_params_dict)
     else:
         raise ValueError('Unknown name of loss function: ' + loss_func_name)
     return loss_func
