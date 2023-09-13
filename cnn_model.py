@@ -56,8 +56,19 @@ def build_model(input_shape, N_classes, basenet='ResNet50V2', weights='imagenet'
 
     data_augmentation = tf.keras.Sequential(
         [
-            tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal"),
             tf.keras.layers.experimental.preprocessing.RandomContrast(factor=0.2),
+            tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
+            tf.keras.layers.experimental.preprocessing.RandomRotation([-0.0625, 0.0625], # As a fraction of 2*Pi
+                                                                      interpolation='bilinear',
+                                                                      fill_mode='constant',
+                                                                      fill_value=0.0
+                                                                     ),
+            tf.keras.layers.experimental.preprocessing.RandomZoom(height_factor=[-0.2, 0.2],
+                                                                  width_factor=None, # To preserve aspect ratio
+                                                                  interpolation='bilinear',
+                                                                  fill_mode='constant',
+                                                                  fill_value=0.0
+                                                                 )
             # tf.keras.layers.experimental.preprocessing.RandomCrop(height=input_shape[0], width=input_shape[0])
         ]
     )
