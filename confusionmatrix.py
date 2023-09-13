@@ -107,7 +107,7 @@ class confusionmatrix:
             trueLabels = np.reshape(trueLabels, (np.prod(trueLabels.shape)))
             predictedLabels = np.reshape(predictedLabels, (np.prod(predictedLabels.shape)))
             
-            confMat_tmp = confusion_matrix(trueLabels, predictedLabels, range(self.numClasses))
+            confMat_tmp = confusion_matrix(trueLabels, predictedLabels, labels=range(self.numClasses))
         # Add temp confusion matrix to instance confusion matrix
         self.confMat = self.confMat + confMat_tmp
         return self
