@@ -90,6 +90,7 @@ def main():
         optimizer_params_dict = ast.literal_eval(args['optimizer_params'])
     # Utils
     network_folder_main = args['network_folder']
+    network_name = args['name']
     save_model_before_training = args['save_model_before_training']
 
 
@@ -102,6 +103,8 @@ def main():
     if 'learning_rate' in optimizer_params_dict:
         network_folder_name_list.append('lr' + str(optimizer_params_dict['learning_rate']))
     network_folder_name_list.append('bs'+str(batch_size))
+    if network_name:
+        network_folder_name_list.append(network_name)
     hash_func = hashlib.blake2s(digest_size=4)
     hash_func.update(bytes(str(args) + str(datetime.datetime.now()), 'utf-8'))
     unique_identifier_from_args = hash_func.hexdigest()
