@@ -47,6 +47,7 @@ def main():
     parser_group_training.add_argument('--optimizer_params', action='store', type=str, help='Parameters parsed to optimizer. Specified as a dict. See Keras documentation for available parameters.')
 
     parser_group_utils = parser.add_argument_group('Utilities')
+    parser_group_utils.add_argument('--name', action='store', default='', type=str, help="Optional name for the network to allow for easier identification (default: %(default)s)")
     parser_group_utils.add_argument('--network_folder', action='store', default='networks', type=str, help="Main folder, where trained network should be saved (default: %(default)s)")
     parser_group_utils.add_argument('--save_model_before_training', action='store_true', help='Set flag to save model before training (Model will always be saved after training).')
 
@@ -137,7 +138,8 @@ def main():
     df_image_label_count = df_train.groupby('label')['image'].count().to_frame()
     num_examples_per_label = np.asarray(df_image_label_count)
     if not 'alpha' in loss_params_dict:
-        loss_params_dict['alpha'] = [(1/num_examples_per_label).tolist()] #np.max(np.log2(num_examples_per_label))-np.log2(num_examples_per_label)+1 #1/np.log2(num_examples_per_label)
+        class_weights = 1/np.squeeze(num_examples_per_label) #np.max(np.log2(num_examples_per_label))-np.log2(num_examples_per_label)+1 #1/np.log2(num_examples_per_label)
+        loss_params_dict['alpha'] = (class_weights/class_weights.sum()).to_list() #np.max(np.log2(num_examples_per_label))-np.log2(num_examples_per_label)+1 #1/np.log2(num_examples_per_label)
 
     if stratify_training_data:
         scale_factors = np.round(np.max(num_examples_per_label)/num_examples_per_label).astype(int)
