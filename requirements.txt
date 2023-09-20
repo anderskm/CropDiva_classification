@@ -1,5 +1,6 @@
 GPUtil
 matplotlib
+numpy
 pandas
 pillow
 scikit-image
