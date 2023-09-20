@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--network', action='store', default='', type=str, help='Path to folder with trained network (default: %(default)s).')
     parser.add_argument('--checkpoint', action='store', default='best', choices=['best', 'last'], type=str, help="Select which chcekpoint to load. 'best' (best_model_checkpoint) or 'last' (model_after_training) (default: %(default)s)")
     parser.add_argument('--dataset_folder', action='store', default='datasets', type=str, help='Path to main folder containing all datasets (patch must not including dataset ID) (default: %(default)s).')
+    parser.add_argument('--dataset_id', action='store', default='', type=str, help='ID of dataset used for evaluation. If not specified, use the same as used for training.')
     parser.add_argument('--subdataset', action='store', default='validation', choices=['train', 'validation', 'test'],type=str, help='Which subset of the dataset to evaluate (default: %(default)s).')
     parser.add_argument('--image_folder', action='store', default='images', type=str, help='Path to main folder containing the images in subfolders (default: %(default)s).')
 
@@ -31,6 +32,7 @@ def main():
     else:
         checkpoint_to_load = 'model_after_training'
     dataset_folder = args['dataset_folder']
+    dataset_id = args['dataset_id']
     subdataset = args['subdataset']
     image_folder = args['image_folder']
     unique_identifier = network_name.split('__')[-1]
@@ -50,12 +52,14 @@ def main():
     # Set CUDA_VISIBLE_DEVICES to mask out all other GPUs than the first available device id
     os.environ["CUDA_VISIBLE_DEVICES"] = str(DEVICE_ID)
 
+    if not dataset_id:
+        dataset_id = train_config['dataset_id']
     # Read dataset
-    dataframe_filepath = glob.glob(os.path.join(dataset_folder, train_config['dataset_id'],'*_'+ train_config['dataset_id'] + '_' + subdataset.title() + '.pkl'))[0]
+    dataframe_filepath = glob.glob(os.path.join(dataset_folder, dataset_id,'*_'+ dataset_id + '_' + subdataset.title() + '.pkl'))[0]
     df = pd.read_pickle(dataframe_filepath)
 
     # Load labels dict
-    labels_dict_file = os.path.join(dataset_folder,train_config['dataset_id'],'labels_dict_' + train_config['dataset_id'] + '.json')
+    labels_dict_file = os.path.join(dataset_folder, dataset_id,'labels_dict_' + dataset_id + '.json')
     with open(labels_dict_file,'r') as fob:
         labels_dict = json.load(fob)
     N_classes = len(labels_dict)
@@ -76,8 +80,9 @@ def main():
     df_w_predictions.to_pickle(os.path.join(network_folder_path, df_filename_out))
 
     # Create, display and save confusion matrix of dataset
+    labels = [key for key in labels_dict.keys()]
     print('\nConfusion matrix from dataset (' + subdataset + '):')
-    CM_subdataset = CM.confusionmatrix(N_classes)
+    CM_subdataset = CM.confusionmatrix(N_classes, labels)
     CM_subdataset.Append(df['label_no'], df['pred_label_no'])
     CM_subdataset.Save(os.path.join(network_folder_path, 'ConfMat_' + checkpoint + '_' + subdataset + '.csv'), fileFormat='csv')
     print(CM_subdataset)
