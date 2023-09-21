@@ -49,9 +49,8 @@ def main():    # Setup input argument parser
 
     # Load previous rng_state
     if load_rng_from_identifier:
-        fob = open(os.path.join('Datasets', load_rng_from_identifier, 'rng_state_' + load_rng_from_identifier + '.pkl'), 'rb')
-        state_py, state_np = pickle.load(fob)
-        fob.close()
+        with open(os.path.join('Datasets', load_rng_from_identifier, 'rng_state_' + load_rng_from_identifier + '.pkl'), 'rb') as fob:
+            state_py, state_np = pickle.load(fob)
 
     # Set rng states
     random.setstate(state_py)
@@ -71,10 +70,12 @@ def main():    # Setup input argument parser
         N_labels = len(df['label'].unique())
         le = LabelEncoder()
         df['label_no'] = le.fit_transform(df['label'])
+    print('Creating one-hot encoding:')
     ohe = OneHotEncoder(sparse=False)
     ohe.fit(np.asarray(df['label_no']).reshape(-1,1))
     df['label_one_hot'] = df[['label_no']].apply(lambda x: ohe.transform(np.asarray(x).reshape(-1,1)), axis=1)
 
+    print('Preparing to assign images to datasets...')
     images_per_label = np.asarray(df.groupby(['label'])['label'].count())
     # cluster_weights = np.asarray(df.groupby(['cluster','label'])['label'].count().unstack().fillna(0))
     df_cluster_weights = df.groupby(['ImageID','label'])['label'].count().unstack().fillna(0)
@@ -159,31 +160,35 @@ def main():    # Setup input argument parser
     hash_func_test.update(bytes(''.join([str(c) for c in test_clusters]), 'utf-8'))
 
     dataset_split_identifier = hash_func_train.hexdigest() + hash_func_validation.hexdigest() + hash_func_test.hexdigest()
-    print('Dataset identifier:')
-    print(dataset_split_identifier)
+    print('Dataset identifier:', dataset_split_identifier)
 
     # Create output folder
     output_folder = os.path.join('Datasets', dataset_split_identifier)
     os.makedirs(output_folder, exist_ok=False)
+    print('Dumping to dataset folder: ', output_folder)
 
-    # Dump state of random number generator prior to splitting dataset
-    fob = open(os.path.join(output_folder, 'rng_state_' + dataset_split_identifier + '.pkl'), mode='wb')
-    pickle.dump((state_py, state_np), fob)
-    fob.close()
 
-    # Dump labels to label no in json format
-    with open(os.path.join(output_folder, 'labels_dict_' + dataset_split_identifier +'.json'),'w') as fob:
-        label_dict = dict(zip(list(le.inverse_transform([i for i in range(N_labels)])), [i for i in range(N_labels)]))
-        json.dump(label_dict, fob)
-    with open(os.path.join(output_folder, 'label_encoder_' + dataset_split_identifier + '.pkl'),mode='wb') as fob:
-        pickle.dump((le, label_dict), fob)
-    with open(os.path.join(output_folder, 'args_' + dataset_split_identifier +'.json'),'w') as fob:
+    args_path = os.path.join(output_folder, 'args_' + dataset_split_identifier +'.json')
+    print('args file: ', args_path)
+    with open(args_path,'w') as fob:
         json.dump(args, fob, indent=3)
 
-    # # Plot image locations on map. Color by assigned dataset
-    # fig1 = px.scatter_mapbox(df, lat='latitude', lon='longitude', color='Dataset', mapbox_style='carto-positron')
-    # fig1.show()
-    # plotly.offline.plot(fig1, filename=os.path.join(output_folder, 'map_of_datasets_' + dataset_split_identifier + '.html'))
+    # Dump state of random number generator prior to splitting dataset
+    rng_state_path = os.path.join(output_folder, 'rng_state_' + dataset_split_identifier + '.pkl')
+    print('RNG state file: ', rng_state_path)
+    with open(rng_state_path, mode='wb') as fob:
+        pickle.dump((state_py, state_np), fob)
+
+    # Dump labels to label no in json format
+    label_dict_out_path = os.path.join(output_folder, 'labels_dict_' + dataset_split_identifier +'.json')
+    print('labels dict: ', label_dict_out_path)
+    with open(label_dict_out_path,'w') as fob:
+        label_dict = dict(zip(list(le.inverse_transform([i for i in range(N_labels)])), [i for i in range(N_labels)]))
+        json.dump(label_dict, fob)
+    label_encoder_path = os.path.join(output_folder, 'label_encoder_' + dataset_split_identifier + '.pkl')
+    print('label encoder: ', label_encoder_path)
+    with open(label_encoder_path,mode='wb') as fob:
+        pickle.dump((le, label_dict), fob)
 
     # Create dataframe for each dataset
     df_train,_ = utils.dataframe_filtering(df, df['Dataset'] == 'Train')
@@ -191,9 +196,15 @@ def main():    # Setup input argument parser
     df_test,_ = utils.dataframe_filtering(df, df['Dataset'] == 'Test')
 
     # Save datasets w. unique identifier
-    df_train.to_pickle(os.path.join(output_folder, 'dataframe_annotations_' + dataset_split_identifier + '_Train.pkl'))
-    df_validation.to_pickle(os.path.join(output_folder, 'dataframe_annotations_' + dataset_split_identifier + '_Validation.pkl'))
-    df_test.to_pickle(os.path.join(output_folder, 'dataframe_annotations_' + dataset_split_identifier + '_Test.pkl'))
+    train_set_path = os.path.join(output_folder, 'dataframe_annotations_' + dataset_split_identifier + '_Train.pkl')
+    print('Train set: ', train_set_path)
+    df_train.to_pickle(train_set_path)
+    val_set_path = os.path.join(output_folder, 'dataframe_annotations_' + dataset_split_identifier + '_Validation.pkl')
+    print('Validation set: ', val_set_path)
+    df_validation.to_pickle(val_set_path)
+    test_set_path = os.path.join(output_folder, 'dataframe_annotations_' + dataset_split_identifier + '_Test.pkl')
+    print('Test set: ', test_set_path)
+    df_test.to_pickle(test_set_path)
 
     print('Dataset identifier: ', dataset_split_identifier)
 
