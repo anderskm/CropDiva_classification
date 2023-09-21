@@ -135,6 +135,16 @@ def main():    # Setup input argument parser
     df_datasets_overview = df.groupby(['Dataset','label'])['label'].count().unstack()
     print(df_datasets_overview)
     df_datasets_ratios = df_datasets_overview / df_datasets_overview.sum()
+    if test_cluster_weights.sum() == 0.0:
+        df_datasets_ratios = pd.concat([pd.DataFrame(data=np.zeros((1,len(df_datasets_ratios.columns))),
+                                                    index=pd.Index(['Test'],name='Dataset'),
+                                                    columns=df_datasets_ratios.columns),
+                                       df_datasets_ratios])
+    if validation_cluster_weights.sum() == 0.0:
+        df_datasets_ratios = pd.concat([df_datasets_ratios,
+                                        pd.DataFrame(data=np.zeros((1,len(df_datasets_ratios.columns))),
+                                                    index=pd.Index(['Validation'],name='Dataset'),
+                                                    columns=df_datasets_ratios.columns)])
     df_datasets_ratios['TARGET'] = [ratios[2], ratios[0], ratios[1]] # Specified order is different from alphabetic
     df_datasets_ratios['Chi_squared'] = [chisq_te, chisq_tr, chisq_va]
     df_datasets_ratios['P-value'] = [p_te, p_tr, p_va]
