@@ -1,92 +1,72 @@
+import argparse
 import glob
+import json
 import numpy as np
 import os
 import pandas as pd
 
 import utils
 
-input_dataframe_filename = 'dataframe_annotations__all.pkl'
-output_dataframe_filename = 'dataframe_annotations__filtered.pkl'
-img_folder = 'D:/VJD_data/resize_0192x0256' #'C:/Vejdirektorat/dataset_exploration/images_for_annotation'
+def main():
+    # Setup input argument parser
+    parser = argparse.ArgumentParser()
 
-df_all = pd.read_pickle(input_dataframe_filename)
+    parser.add_argument('--input_df', action='store', default='dataframe_annotations__all.pkl', type=str, help='Filename of pickle file containing dataframe to be filtered (default: %(default)s).')
+    parser.add_argument('--output_df', action='store', default='', type=str, help='Filename of filtered dataframe. Leave empty to simply append "__filtered" to the filename (default: %(default)s).')
+    parser.add_argument('--discard_labels_file', action='store', default='', type=str, help='Filename of json file with list of classes to discard. Leave empty to remove classes with less than 100 samples (default: %(default)s).')
 
-print('\n\n### Dataframe stats BEFORE filtering ###')
-utils.print_annotation_stats(df_all)
+    args = vars(parser.parse_known_args()[0])
+    print('\nArguments: ', args)
 
-## Clean-up
+    input_dataframe_filename = args['input_df']
+    print('Input: ', input_dataframe_filename)
+    output_dataframe_filename = args['output_df']
+    basename, ext = os.path.splitext(os.path.basename(input_dataframe_filename))
+    if not output_dataframe_filename:
+        output_dataframe_filename = os.path.join(os.path.dirname(input_dataframe_filename), basename + '__filtered' + ext)
+    print('Output: ', output_dataframe_filename)
+    labels_discard_file = args['discard_labels_file']
+    if not labels_discard_file:
+        labels_discard_file = os.path.join(os.path.dirname(input_dataframe_filename), basename + '__labels_discard.json')
+    
+    df_all = pd.read_pickle(input_dataframe_filename)
 
-print('\n\n### Cleaning up dataset ###')
+    print('\n\n### Dataframe stats BEFORE filtering ###')
+    utils.print_annotation_stats(df_all)
 
-# Remove images from classes with few samples
-print('\nRemoving classes with too few samples')
-df_label_count = df_all.groupby(['label'])['image'].count()
-df_filt = df_all
-labels = df_label_count.index.to_list()
-label_count = df_label_count.to_list()
-labels_discard = [l for l,c in zip(labels, label_count) if c < 100]
+    ## Clean-up
 
-for label in labels_discard:
-    df_filt, _ = utils.dataframe_filtering(df_filt, df_filt['label'] != label)
+    print('\n\n### Cleaning up dataset ###')
 
+    # Remove images from classes with few samples
+    print('\nRemoving classes with too few samples')
 
-# for label, count in zip(labels, label_count):
-#     if (count <= 100):
-#         df_filt, _ = utils.dataframe_filtering(df_filt, 
-#                                                 df_filt['label'] == label)
+    if os.path.exists(labels_discard_file):
+        with open(labels_discard_file,'r') as fob:
+            labels_discard = json.load(fob)
+    else:
+        df_label_count = df_all.groupby(['label'])['image'].count()
+        
+        labels = df_label_count.index.to_list()
+        label_count = df_label_count.to_list()
+        labels_discard = [l for l,c in zip(labels, label_count) if c < 100]
+        with open(labels_discard_file,'w') as fob:
+            json.dump(labels_discard, fob)
+    
+    df_filt = df_all
+    for label in labels_discard:
+        df_filt, _ = utils.dataframe_filtering(df_filt, df_filt['label'] != label)
 
+    print('\n### End of Cleaning up dataset ###\n\n')
 
+    ## End of Clean-up
 
-# Filter images with underrepresented labels and images with mixed labels
-# print('\nRemoving images with labels Mixed and Bjoerneklo:')
-# df_filt_lbl, df_removed_lbl = utils.dataframe_filtering(df_all,
-#                                                         (df_all['label'] != 'Mixed') & (df_all['label'] != 'Bjoerneklo'))
-# print(df_removed_lbl.groupby(['label','dates'])['label'].count().unstack())
+    print('\n\n### Dataframe stats AFTER filtering ###')
+    utils.print_annotation_stats(df_filt)
 
-# # Remove images with polygons (bounding box) large overlap
-# # (Note: In some cases, the polygons are not overlapping, but their BB are.)
-# print('\nRemoving images bounding box overlap > 75%:')
-# df_filt_bb, df_removed_bb = utils.dataframe_filtering(df_filt_lbl, 
-#                                                         df_filt_lbl['BBox_IoA_max'] <= 0.75)
-# print(df_removed_bb.groupby(['label','dates'])['label'].count().unstack())
+    df_filt.to_pickle(output_dataframe_filename)
 
-# # Filter on image names
-# if img_folder:
-#     subfolders = glob.glob(os.path.join(img_folder,'*'))
-#     image_names = []
-#     for subfolder in subfolders:
-#         image_paths = glob.glob(os.path.join(subfolder, '*.jpg'))
-#         image_names += [os.path.split(image_path)[1] for image_path in image_paths]
-#     df_filt = df_filt_bb[df_filt_bb['image'].isin(image_names)]
-# else:
-#     df_filt = df_filt_bb
+    print('done')
 
-# For small dataset. Assign all images to their own individual cluster
-# df_filt['cluster'] = [i for i in range(len(df_filt))]
-
-# # Show polygons with overlapping BB
-# df_ol = df_filt[df_filt['BBox_IoA_max'] > 0.75]
-# for r, row in df_ol.iterrows():
-#     polygons = row['polygons']
-#     fig = plt.figure()
-#     ax = fig.add_subplot(111)
-#     ax.plot([0, 4048, 4048, 0, 0], [0,0, 3036, 3036, 0])
-#     print(ax)
-#     for p, polygon in enumerate(polygons):
-#         # TODO: Plot polygon
-#         ax.plot(polygon[:,0], polygon[:,1])
-#         ax.text(polygon[:,0].mean(), polygon[:,1].mean(), row['labels'][p])
-#     ax.axis('equal')
-#     ax.set_title(str(row['BBox_IoA_max']))
-#     plt.show()
-
-print('\n### End of Cleaning up dataset ###\n\n')
-
-## End of Clean-up
-
-print('\n\n### Dataframe stats AFTER filtering ###')
-utils.print_annotation_stats(df_filt)
-
-df_filt.to_pickle(output_dataframe_filename)
-
-print('done')
+if __name__ == '__main__':
+    main()
