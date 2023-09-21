@@ -24,7 +24,7 @@ def main():
     output_dataframe_filename = args['output_df']
     basename, ext = os.path.splitext(os.path.basename(input_dataframe_filename))
     if not output_dataframe_filename:
-        output_dataframe_filename = os.path.join(os.path.dirname(input_dataframe_filename), basename + '__filtered3' + ext)
+        output_dataframe_filename = os.path.join(os.path.dirname(input_dataframe_filename), basename + '__filtered' + ext)
     print('Output: ', output_dataframe_filename)
     labels_discard_file = args['discard_labels_file']
     if not labels_discard_file:
