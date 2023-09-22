@@ -59,8 +59,17 @@ df_inliers = df_inliers.drop(['predictions', 'pred_label_no'], axis=1)
 
 print(df_inliers)
 
+print('Class distribution BEFORE including new samples:')
+df_all = pd.concat([df_train, df_validation, df_test])
+print(df_all.groupby(['Dataset','label'])['label'].count().unstack())
+
 # Concat inliers to training data
 df_train = pd.concat([df_train, df_inliers])
+
+
+print('Class distribution AFTER including new samples:')
+df_all = pd.concat([df_train, df_validation, df_test])
+print(df_all.groupby(['Dataset','label'])['label'].count().unstack())
 
 # Create unique identifier from the cluster dataset assignment
 hash_func_train = hashlib.blake2s(digest_size=4)
