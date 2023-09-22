@@ -16,6 +16,10 @@ inliner_image_folder = 'D:/CropDiva_tmp/05SEP23_NotApproved_ScaledPadding'
 parent_image_folder = 'C:/Projekter/2023_CropDiva__Weed_classificaiton/TrainingData/05SEP23_scale224px_50px'
 output_image_folder = 'C:/Projekter/2023_CropDiva__Weed_classificaiton/TrainingData/05SEP23_scale224px_50px__merged'
 
+df_train = pd.read_pickle(os.path.join(dataset_folder, parent_dataset, 'dataframe_annotations_' + parent_dataset + '_Train.pkl'))
+df_test = pd.read_pickle(os.path.join(dataset_folder, parent_dataset, 'dataframe_annotations_' + parent_dataset + '_Test.pkl'))
+df_validation = pd.read_pickle(os.path.join(dataset_folder, parent_dataset, 'dataframe_annotations_' + parent_dataset + '_Validation.pkl'))
+
 df_inliers = pd.read_pickle(inliners_path)
 
 print(df_inliers.head())
@@ -33,7 +37,7 @@ df_inliers['label'] = [label_no_2_label[lo] for lo in df_inliers['label_no'].val
 
 # Update one-hot encoding
 ohe = OneHotEncoder(sparse=False)
-ohe.fit(np.asarray(df_inliers['label_no']).reshape(-1,1))
+ohe.fit(np.asarray(df_train['label_no']).reshape(-1,1))
 df_inliers['label_one_hot'] = df_inliers[['label_no']].apply(lambda x: ohe.transform(np.asarray(x).reshape(-1,1)), axis=1)
 
 
@@ -49,10 +53,6 @@ for row in tqdm.tqdm(df_inliers.iterrows(), total=df_inliers.shape[0]):
     shutil.copyfile(src, dst)
 
 df_inliers['folder'] = df_inliers['label']
-
-df_train = pd.read_pickle(os.path.join(dataset_folder, parent_dataset, 'dataframe_annotations_' + parent_dataset + '_Train.pkl'))
-df_test = pd.read_pickle(os.path.join(dataset_folder, parent_dataset, 'dataframe_annotations_' + parent_dataset + '_Test.pkl'))
-df_validation = pd.read_pickle(os.path.join(dataset_folder, parent_dataset, 'dataframe_annotations_' + parent_dataset + '_Validation.pkl'))
 
 # Remove extra columns before concatenation
 df_inliers = df_inliers.drop(['predictions', 'pred_label_no'], axis=1)
