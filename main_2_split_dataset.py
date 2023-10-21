@@ -25,6 +25,7 @@ def main():    # Setup input argument parser
     parser.add_argument('--input_df', action='store', default='dataframe_annotations__all__filtered3.pkl', type=str, help='Filename of pickle file containing filtered dataframe (default: %(default)s).')
     parser.add_argument('--ratios', action='store', nargs=3, default=[0.7, 0.15, 0.15], help="3 floats indication the splits between training, validation and test set (default: %(default)s).")
     parser.add_argument('--parent_dataset', action='store', default='', type=str, help='Path to dataset folder of dataset from which labels should be inherited (default: %(default)s).')
+    parser.add_argument('--labels_dict', action='store', default='', type=str, help='Filename of json file with dictionany of classes. Use classes if extra classes than in parent dataset (default: %(default)s).')
     parser.add_argument('--load_rng_from_identifier', action='store', default='', type=str, help='Set to identifier to load previous used rng_state. if set to '', use a new random seed/state set by the random number generators')
 
     args = vars(parser.parse_known_args()[0])
@@ -34,6 +35,7 @@ def main():    # Setup input argument parser
     ratios = [float(i) for i in args['ratios']]
     load_rng_from_identifier = args['load_rng_from_identifier']
     parent_dataset = args['parent_dataset']
+    labels_dict_file = args['labels_dict']
 
     # input_dataframe_filename = 'dataframe_annotations__filtered.pkl'
     # ratios = [0.7, 0.15, 0.15] # Train, validation, test
@@ -64,7 +66,14 @@ def main():    # Setup input argument parser
         le_file = glob.glob(os.path.join('Datasets',parent_dataset, 'label_encoder_*.pkl'))[0]
         print(le_file)
         with open(le_file, 'rb') as fob:
-            le, label_dict = pickle.load(fob)
+            le, labels_dict = pickle.load(fob)
+        if labels_dict_file:
+            # Update label encoder to include new labels from labels dict
+            with open(labels_dict_file,'r') as fob:
+                labels_dict = json.load(fob)
+            new_labels = [k for k in labels_dict.keys() if k not in le.classes_]
+            for l in new_labels:
+                le.classes_ = np.append(le.classes_, l)
         df['label_no'] = le.transform(df['label'])
     else:
         N_labels = len(df['label'].unique())
@@ -180,15 +189,15 @@ def main():    # Setup input argument parser
         pickle.dump((state_py, state_np), fob)
 
     # Dump labels to label no in json format
-    label_dict_out_path = os.path.join(output_folder, 'labels_dict_' + dataset_split_identifier +'.json')
-    print('labels dict: ', label_dict_out_path)
-    with open(label_dict_out_path,'w') as fob:
-        label_dict = dict(zip(list(le.inverse_transform([i for i in range(N_labels)])), [i for i in range(N_labels)]))
-        json.dump(label_dict, fob)
+    labels_dict_out_path = os.path.join(output_folder, 'labels_dict_' + dataset_split_identifier +'.json')
+    print('labels dict: ', labels_dict_out_path)
+    with open(labels_dict_out_path,'w') as fob:
+        labels_dict = dict(zip(list(le.inverse_transform([i for i in range(N_labels)])), [i for i in range(N_labels)]))
+        json.dump(labels_dict, fob)
     label_encoder_path = os.path.join(output_folder, 'label_encoder_' + dataset_split_identifier + '.pkl')
     print('label encoder: ', label_encoder_path)
     with open(label_encoder_path,mode='wb') as fob:
-        pickle.dump((le, label_dict), fob)
+        pickle.dump((le, labels_dict), fob)
 
     # Create dataframe for each dataset
     df_train,_ = utils.dataframe_filtering(df, df['Dataset'] == 'Train')
