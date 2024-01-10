@@ -37,6 +37,7 @@
 1. Create dataframe of all the images: `python main_0_make_dataframe.py`
 1. Filter images: `python main_1_filter_dataframe.py`
 1. Split dataset into train, validation and test: `python main_2_split_dataset.py`
+      
       2. **NOTE**: Take note of the hex (dataset id) at the end, as it is needed when starting a training.
 
 ## Train network
