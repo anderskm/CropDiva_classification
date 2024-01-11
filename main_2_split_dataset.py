@@ -22,7 +22,7 @@ import utils
 def main():    # Setup input argument parser
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input_df', action='store', default='dataframe_annotations__all__filtered3.pkl', type=str, help='Filename of pickle file containing filtered dataframe (default: %(default)s).')
+    parser.add_argument('--input_df', action='store', default='dataframe_annotations__all__filtered.pkl', type=str, help='Filename of pickle file containing filtered dataframe (default: %(default)s).')
     parser.add_argument('--ratios', action='store', nargs=3, default=[0.7, 0.15, 0.15], help="3 floats indication the splits between training, validation and test set (default: %(default)s).")
     parser.add_argument('--parent_dataset', action='store', default='', type=str, help='Path to dataset folder of dataset from which labels should be inherited (default: %(default)s).')
     parser.add_argument('--labels_dict', action='store', default='', type=str, help='Filename of json file with dictionany of classes. Use classes if extra classes than in parent dataset (default: %(default)s).')

@@ -11,10 +11,6 @@ import os
 import pandas as pd
 import skimage.io
 import skimage.transform
-# from skimage.io import imread
-# from skimage.transform import resize
-# import tensorflow as tf
-import tqdm
 
 import cnn_model
 import confusionmatrix as CM
