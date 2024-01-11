@@ -34,8 +34,8 @@
 
 ## Create datasets
 1. Create dataframe of all the images: `python main_0_make_dataframe.py --output_df RNJ_test.pkl --data_folder ..\TrainingData\05SEP23_scale224px_50px\ --img_ext png`
-1. Filter images: `python main_1_filter_dataframe.py`
-1. Split dataset into train, validation and test: `python main_2_split_dataset.py`
+1. Filter images: `python main_1_filter_dataframe.py --input_df RNJ_test.pkl --min_sample_count 500`
+1. Split dataset into train, validation and test: `python main_2_split_dataset.py --input_df .\RNJ_test__filtered.pkl`
       
       2. **NOTE**: Take note of the hex (dataset id) at the end, as it is needed when starting a training.
 
